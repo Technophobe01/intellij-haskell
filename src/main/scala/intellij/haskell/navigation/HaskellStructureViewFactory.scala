@@ -38,7 +38,7 @@ class HaskellStructureViewFactory extends PsiStructureViewFactory {
   }
 }
 
-private class HaskellStructureViewModel(psiFile: PsiFile) extends StructureViewModelBase(psiFile, new HaskellStructureViewTreeElement(psiFile, "")) with StructureViewModel.ElementInfoProvider {
+private class HaskellStructureViewModel(psiFile: PsiFile) extends StructureViewModelBase(psiFile, new HaskellStructureViewTreeElement(psiFile)) with StructureViewModel.ElementInfoProvider {
 
   def isAlwaysShowsPlus(structureViewTreeElement: StructureViewTreeElement): Boolean = {
     false
@@ -49,21 +49,21 @@ private class HaskellStructureViewModel(psiFile: PsiFile) extends StructureViewM
   }
 }
 
-private class HaskellStructureViewTreeElement(val element: PsiElement, val typeSignature: String) extends StructureViewTreeElement with ItemPresentation {
+private class HaskellStructureViewTreeElement(val element: PsiElement) extends StructureViewTreeElement with ItemPresentation {
 
   def getValue: AnyRef = {
     element
   }
 
-  def navigate(requestFocus: Boolean): Unit = {
+  override def navigate(requestFocus: Boolean): Unit = {
     element.asInstanceOf[Navigatable].navigate(requestFocus)
   }
 
-  def canNavigate: Boolean = {
+  override def canNavigate: Boolean = {
     element.asInstanceOf[Navigatable].canNavigate
   }
 
-  def canNavigateToSource: Boolean = {
+  override def canNavigateToSource: Boolean = {
     element.asInstanceOf[Navigatable].canNavigateToSource
   }
 
@@ -76,7 +76,7 @@ private class HaskellStructureViewTreeElement(val element: PsiElement, val typeS
     (element match {
       case hf: HaskellFile => HaskellPsiUtil.findHaskellDeclarationElements(hf)
       case _ => Seq()
-    }).map(declarationElement => new HaskellStructureViewTreeElement(declarationElement, declarationElement.getText)).toArray
+    }).map(declarationElement => new HaskellStructureViewTreeElement(declarationElement)).toArray
   }
 
   override def getPresentableText: String = {

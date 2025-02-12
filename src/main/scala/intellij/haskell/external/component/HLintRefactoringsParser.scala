@@ -43,8 +43,17 @@ object HLintRefactoringsParser {
   @annotation.nowarn
   private def deleteParser[_: P]: P[Delete] = P("Delete" ~ keyRtypePosParser(Pass)).map({ case (x, y, _) => Delete(x, y) })
 
-  private def replaceParser[_: P]: P[Replace] = P("Replace" ~ keyRtypePosParser(commaParser ~ "subts =" ~ subtsParser ~ commaParser ~ keyValueParser("orig", string)) ~ (commaParser ~ deleteParser).rep)
-    .map({ case (x, y, (w, z), q) => Replace(x, y, w, z, q) })
+  private def replaceParser[_: P]: P[Replace] = {
+    val replaceKey = "Replace"
+    val substitutionsParser = commaParser ~ "subts =" ~ subtsParser
+    val originalParser = commaParser ~ keyValueParser("orig", string)
+    val deletesParser = (commaParser ~ deleteParser).rep
+
+    P(replaceKey ~ keyRtypePosParser(substitutionsParser ~ originalParser) ~ deletesParser)
+      .map { case (rType, pos, (subts, orig), deletes) =>
+        Replace(rType, pos, subts, orig, deletes)
+      }
+  }
 
   private def modifyCommentParser[_: P]: P[ModifyComment] = P("ModifyComment" ~ "{" ~ posParser ~ commaParser ~ keyValueParser("newComment", string) ~ "}").
     map({ case (x, y) => ModifyComment(x, y) })

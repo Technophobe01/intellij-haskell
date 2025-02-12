@@ -19,13 +19,13 @@ object HLintRefactoringsParser {
 
   sealed trait RType
   case object Expr extends RType
-  case object Decl extends RType
+  private case object Decl extends RType
   case object Pattern extends RType
   case object Stmt extends RType
   case object Type extends RType
   case object ModuleName extends RType
-  case object Bind extends RType
-  case object Match extends RType
+  private case object Bind extends RType
+  private case object Match extends RType
   case object Import extends RType
 
   def parseRefactoring(hlintOutput: String): Either[String, Refactoring] = parse(hlintOutput, refactoringParser(_), verboseFailures = true) match {
@@ -41,7 +41,7 @@ object HLintRefactoringsParser {
   private[component] def parsePos(hlintOutput: String): Parsed[SrcSpan] = parse(hlintOutput, posParser(_), verboseFailures = true)
 
   @annotation.nowarn
-  private def deleteParser[_: P]: P[Delete] = P("Delete" ~ keyRtypePosParser(Pass)).map({ case (x, y, _) => Delete(x, y) })
+  private def deleteParser[_: P](): P[Delete] = P("Delete" ~ keyRtypePosParser(Pass)).map({ case (x, y, _) => Delete(x, y) })
 
   private def replaceParser[_: P]: P[Replace] = {
     val replaceKey = "Replace"
@@ -58,11 +58,11 @@ object HLintRefactoringsParser {
   private def modifyCommentParser[_: P]: P[ModifyComment] = P("ModifyComment" ~ "{" ~ posParser ~ commaParser ~ keyValueParser("newComment", string) ~ "}").
     map({ case (x, y) => ModifyComment(x, y) })
 
-  private def insertCommentParser[_: P]: P[InsertComment] = P("InsertComment" ~ "{" ~ posParser ~ commaParser ~ keyValueParser("newComment", string) ~ "}").
+  private def insertCommentParser[_: P](): P[InsertComment] = P("InsertComment" ~ "{" ~ posParser ~ commaParser ~ keyValueParser("newComment", string) ~ "}").
     map({ case (x, y) => InsertComment(x, y) })
 
-  private def removeAsKeywordParser[_: P]: P[RemoveAsKeyword] = P("RemoveAsKeyword" ~ "{" ~ posParser ~ "}").
-    map({ case (x) => RemoveAsKeyword(x) })
+  private def removeAsKeywordParser[_: P](): P[RemoveAsKeyword] = P("RemoveAsKeyword" ~ "{" ~ posParser ~ "}").
+    map(x => RemoveAsKeyword(x))
 
   private def keyRtypePosParser[_: P, A](rest: => P[A]) = "{" ~ keyRtypeParser ~ commaParser ~ posParser ~ rest ~ "}"
 
